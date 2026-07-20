@@ -1,0 +1,143 @@
+\documentclass[tikz,border={24pt 24pt 24pt 60pt}]{standalone}
+\usetikzlibrary{mindmap, trees}
+\usepackage{fontawesome5}
+
+% --- NAGWA BRAND COLORS ---
+% Text/Line Colors
+\definecolor{Grey}{RGB}{76,76,78}
+\definecolor{Brown}{RGB}{138,93,59}
+\definecolor{Blue}{RGB}{85,164,224}
+\definecolor{BBlue}{RGB}{0,115,181}
+\definecolor{Red}{RGB}{225,75,59}
+\definecolor{Orange}{RGB}{243,162,3}
+\definecolor{Yellow}{RGB}{252,238,33}
+\definecolor{Lemon}{RGB}{203,219,67}
+\definecolor{Green}{RGB}{16,158,36}
+\definecolor{GGreen}{RGB}{14,127,71}
+\definecolor{GGGreen}{RGB}{0,156,156}
+\definecolor{Purple}{RGB}{124,36,231}
+\definecolor{PPurple}{RGB}{163,10,120}
+\definecolor{Fushia}{RGB}{225,50,162}
+
+% Fill Colors
+\definecolor{RootGrey}{HTML}{E0E0E0} % <-- Replace E0E0E0 with your exact grey pastel hex code
+\definecolor{Pink1}{HTML}{F4D4E1}
+\definecolor{Pink2}{HTML}{F7E2EB}
+\definecolor{Peach1}{HTML}{F6C9A0}
+\definecolor{Peach2}{HTML}{FCDDC5}
+\definecolor{Olive1}{HTML}{CED5B2}
+\definecolor{Olive2}{HTML}{E6EAD6}
+\definecolor{Sage1}{HTML}{AFC3BC}
+\definecolor{Sage2}{HTML}{D3E0DB}
+\definecolor{Blue1}{HTML}{ACC5DB}
+\definecolor{Blue2}{HTML}{D3E0EA}
+\definecolor{Purple1}{HTML}{C6A5C0}
+\definecolor{Purple2}{HTML}{E8D1E4}
+\definecolor{Rose1}{HTML}{FF9FAF}
+\definecolor{Rose2}{HTML}{FFD4DD}
+
+% --- BILINGUAL SETUP ---
+\usepackage{polyglossia}
+<% if lang == 'ar' -%>
+\setmainlanguage{arabic}
+\setotherlanguage{english}
+<% else -%>
+\setmainlanguage{english}
+\setotherlanguage{arabic}
+<% endif -%>
+
+% The Arabic font is loaded regardless of the chosen language, so RTL text
+% can still be embedded inside an English map.
+<% if arabic_font == bundled_font_label or not arabic_font -%>
+\newfontfamily\arabicfont[Path=<< font_dir >>, Script=Arabic]{<< bundled_font_file >>}
+<% else -%>
+\IfFontExistsTF{<< arabic_font >>}{
+  \newfontfamily\arabicfont[Script=Arabic]{<< arabic_font >>}
+}{
+  \newfontfamily\arabicfont[Path=<< font_dir >>, Script=Arabic]{<< bundled_font_file >>}
+}
+<% endif -%>
+
+\begin{document}
+
+<% set text_dir = '\setRTL' if lang == 'ar' else '\setLTR' -%>
+<% set n = root.children|length -%>
+
+<% set ns = namespace(has_level_3=false) -%>
+<% for child in root.children -%>
+  <% if child.children|length > 0 -%>
+    <% set ns.has_level_3 = true -%>
+  <% endif -%>
+<% endfor -%>
+
+\begin{tikzpicture}[
+    grow cyclic,
+    mindmap,
+    <% if shape == 'rectangle' -%>
+    every node/.style={rectangle, rounded corners=3pt, inner xsep=10pt, inner ysep=10pt, align=center, execute at begin node={<< text_dir >>\hyphenpenalty=10000}},
+    every child/.append style={
+        edge from parent path={(\tikzparentnode) -- (\tikzchildnode)},
+        edge from parent/.style={draw, black!50, thin}
+    },
+    color logic child/.style={},
+    color logic node/.style={fill=#1},
+    <% else -%>
+    every node/.style={concept, inner sep=3pt, align=center, execute at begin node={<< text_dir >>\hyphenpenalty=10000}},
+    <% if child_path == 'grey' -%>
+    concept color=black!10,
+    color logic child/.style={},
+    color logic node/.style={fill=#1},
+    <% else -%>
+    concept color=<< root.fill >>,
+    color logic child/.style={concept color=#1},
+    color logic node/.style={},
+    <% endif -%>
+    <% endif -%>
+    level 1/.append style={
+        level distance=7cm,
+        sibling angle=<< 360 // n if n > 0 else 360 >>,
+        <% if not ns.has_level_3 and n % 2 != 0 -%>
+        <% if lang == 'ar' -%>counterclockwise from=90,<% else -%>clockwise from=90,<% endif -%>
+        <% endif -%>
+        text width=3cm,
+        font=\fontsize{13.5pt}{16.2pt}\selectfont\bfseries,
+        inner sep=10pt,
+        minimum size=2.25cm
+    },
+    level 2/.append style={
+        level distance=6cm,
+        sibling angle=45,
+        text width=3.5cm,
+        font=\fontsize{12pt}{14.4pt}\selectfont\bfseries,
+        inner sep=10pt,
+        minimum size=1.75cm
+    },
+    level 3/.append style={
+        level distance=6cm,
+        sibling angle=90,
+        text width=2.5cm,
+        font=\fontsize{12pt}{14.4pt}\selectfont\bfseries,
+        inner sep=10pt,
+        minimum size=1.15cm
+    }
+]
+
+  \node[color logic node=<< root.fill >>, text=<< root.text_color >>, font=\fontsize{13.5pt}{16.2pt}\selectfont\bfseries, inner sep=10pt, minimum size=2.25cm<% if root.custom %>, << root.custom >><% endif %>] {
+    <% if root.icon %>\LR{\huge\faIcon{<< root.icon >>}}\\[0.5ex]<% endif %><< root.text >>
+  }
+    <% for child in root.children %>
+      child[color logic child=<< child.fill >><% if child.custom %>, << child.custom >><% endif %>] { node[color logic node=<< child.fill >>, text=<< child.text_color >><% if child.custom %>, << child.custom >><% endif %>] {
+        <% if child.icon %>\LR{\huge\faIcon{<< child.icon >>}}\\[0.5ex]<% endif %><< child.text >>
+      }
+        <% if child.children %>
+          <% for grandchild in child.children %>
+            child[color logic child=<< grandchild.fill >><% if grandchild.custom %>, << grandchild.custom >><% endif %>] { node[color logic node=<< grandchild.fill >>, text=<< grandchild.text_color >><% if grandchild.custom %>, << grandchild.custom >><% endif %>] {
+              <% if grandchild.icon %>\LR{\LARGE\faIcon{<< grandchild.icon >>}}\\[0.5ex]<% endif %><< grandchild.text >>
+            } }
+          <% endfor %>
+        <% endif %>
+      }
+    <% endfor %>
+  ;
+\end{tikzpicture}
+\end{document}

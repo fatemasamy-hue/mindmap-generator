@@ -1,0 +1,4 @@
+texlive-xetex
+texlive-latex-recommended
+texlive-pictures
+poppler-utils
