@@ -26,8 +26,8 @@ COLOR_PRESETS = [
     "", "Pink1", "Peach1", "Olive1", "Sage1", "Blue1", "Purple1", "Rose1"
 ]
 
-BUNDLED_ARABIC_FONT_FILE = "NotoNaskhArabic-Regular.ttf"
-BUNDLED_ARABIC_FONT_LABEL = "Bundled (Noto Naskh Arabic) — always works"
+BUNDLED_ARABIC_FONT_FILE = "arial.ttf"
+BUNDLED_ARABIC_FONT_LABEL = "Arial"
 
 # Current defaults baked into template.tex for each level's spacing/sizing.
 DEFAULT_LEVEL_STYLES = {
