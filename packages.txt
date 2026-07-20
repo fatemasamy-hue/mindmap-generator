@@ -3,3 +3,5 @@ texlive-latex-recommended
 texlive-pictures
 poppler-utils
 texlive-fonts-extra
+texlive-lang-arabic
+texlive-formats-extra
