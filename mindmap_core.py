@@ -59,14 +59,14 @@ DEFAULT_LEVEL_STYLES = {
 
 CUSTOM_SETTINGS_REFERENCE = {
     "sibling angle=80": {
-        "applies_to": "MOTHER (Parent)",
+        "applies_to": "BUBBLE ITSELF (Self)",
         "type": "Spacing Parameters",
-        "description": "Increases or decreases the fan spread of the children attached to this mother.",
+        "description": "Increases or decreases the fan spread of this bubble with its sibling.",
     },
     "level distance=8cm": {
-        "applies_to": "MOTHER (Parent)",
+        "applies_to": "BUBBLE ITSELF (Self)",
         "type": "Spacing Parameters",
-        "description": "Pushes all children attached to this mother further out from her center.",
+        "description": "Pushes this bubble further out from its mother bubble.",
     },
     "text width=5cm": {
         "applies_to": "BUBBLE ITSELF (Self)",
@@ -111,14 +111,14 @@ CUSTOM_SETTINGS_REFERENCE = {
 }
 
 COMPASS_DIRECTIONS = [
-    (0, "Straight to the Right (3:00) — Note: Flips to Left (9:00) in Arabic mode"),
-    (45, "Top Right diagonal (1:00) — Flips to Top Left in Arabic mode"),
+    (0, "Straight to the Right (3:00)"),
+    (45, "Top Right diagonal (1:00)"),
     (90, "Straight Up (12:00)"),
-    (135, "Top Left diagonal (10:00) — Flips to Top Right in Arabic mode"),
-    (180, "Straight to the Left (9:00) — Flips to Right (3:00) in Arabic mode"),
-    (225, "(or -135°) Bottom Left diagonal (7:00) — Flips to Bottom Right in Arabic mode"),
+    (135, "Top Left diagonal (10:00)"),
+    (180, "Straight to the Left (9:00)"),
+    (225, "(or -135°) Bottom Left diagonal (7:00)"),
     (270, "(or -90°) Straight Down (6:00)"),
-    (315, "(or -45°) Bottom Right diagonal (4:00) — Flips to Bottom Left in Arabic mode"),
+    (315, "(or -45°) Bottom Right diagonal (4:00)"),
 ]
 
 # --------------------------------------------------------------------------
