@@ -6,7 +6,7 @@ import streamlit as st
 
 import mindmap_core as core
 
-st.set_page_config(page_title="Mind-Map Generator", page_icon="🧠", layout="wide")
+st.set_page_config(page_title="Mind Map Generator", page_icon="🧠", layout="wide")
 
 TEMPLATE_DIR = os.path.dirname(os.path.abspath(__file__))
 
@@ -112,7 +112,7 @@ with st.sidebar:
             "or an uploaded CSV — then generate the image. No LaTeX or CSV knowledge required."
         )
 
-st.title("🧠 Mind-Map Generator")
+st.title("🧠 Mind Map Generator")
 st.caption("Build a mind map, preview it, and export a print-ready PDF/PNG — no LaTeX or spreadsheet wrangling needed.")
 
 
