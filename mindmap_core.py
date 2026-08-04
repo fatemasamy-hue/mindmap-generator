@@ -1,4 +1,5 @@
 """
+
 Core logic for the Mind Map Generator app.
 Handles the node data model, CSV / Google Sheet parsing, LaTeX escaping,
 and the render -> xelatex -> PNG pipeline.
