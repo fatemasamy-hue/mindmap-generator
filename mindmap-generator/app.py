@@ -13,7 +13,7 @@ TEMPLATE_DIR = os.path.dirname(os.path.abspath(__file__))
 
 # Preview zoom only — never changes the fixed 752×492 pt canvas.
 ZOOM_MIN = 0.25
-ZOOM_MAX = 3.0
+ZOOM_MAX = 2.0  # at least 200% — preview scrolls when larger than the panel
 ZOOM_STEP = 0.25
 ZOOM_DEFAULT = 1.0
 
@@ -308,18 +308,18 @@ def _preview_with_safe_area(png_path, zoom):
         f"Safe area: {core.CANVAS_WIDTH_PT}×{core.CANVAS_HEIGHT_PT} pt "
         f"(dashed border) · preview zoom {zoom:.0%}"
     )
+    # Outer scroller is width:100% of the panel; inner box uses zoomed pixel size
+    # (no max-width clamp) so zoom past ~panel width actually enlarges and scrolls.
     st.markdown(
         f"""
         <div style="
-            display: inline-block;
-            width: {display_w}px;
-            max-width: 100%;
+            width: 100%;
             overflow: auto;
             line-height: 0;
         ">
           <div style="
             position: relative;
-            width: 100%;
+            width: {display_w}px;
             aspect-ratio: {aspect};
             box-sizing: border-box;
             border: 2px dashed #6b7280;
