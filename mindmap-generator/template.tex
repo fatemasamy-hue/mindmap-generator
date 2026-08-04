@@ -37,25 +37,39 @@
 \definecolor{Rose2}{HTML}{FFD4DD}
 
 % --- BILINGUAL SETUP ---
+% Fonts are chosen automatically by language:
+%   Arabic → Noto (Regular / Bold)
+%   English → STIX2Text family
 \usepackage{polyglossia}
 <% if lang == 'ar' -%>
 \setmainlanguage{arabic}
 \setotherlanguage{english}
+\newfontfamily\arabicfont[
+  Path=<< font_dir >>,
+  Script=Arabic,
+  BoldFont=<< arabic_font_bold_file >>,
+]{<< arabic_font_file >>}
+\newfontfamily\englishfont[
+  Path=<< font_dir >>,
+  BoldFont=<< english_font_bold_file >>,
+  ItalicFont=<< english_font_italic_file >>,
+  BoldItalicFont=<< english_font_bolditalic_file >>,
+]{<< english_font_file >>}
 <% else -%>
 \setmainlanguage{english}
 \setotherlanguage{arabic}
-<% endif -%>
-
-% The Arabic font is loaded regardless of the chosen language, so RTL text
-% can still be embedded inside an English map.
-<% if arabic_font == bundled_font_label or not arabic_font -%>
-\newfontfamily\arabicfont[Path=<< font_dir >>, Script=Arabic]{<< bundled_font_file >>}
-<% else -%>
-\IfFontExistsTF{<< arabic_font >>}{
-  \newfontfamily\arabicfont[Script=Arabic]{<< arabic_font >>}
-}{
-  \newfontfamily\arabicfont[Path=<< font_dir >>, Script=Arabic]{<< bundled_font_file >>}
-}
+\setmainfont[
+  Path=<< font_dir >>,
+  BoldFont=<< english_font_bold_file >>,
+  ItalicFont=<< english_font_italic_file >>,
+  BoldItalicFont=<< english_font_bolditalic_file >>,
+]{<< english_font_file >>}
+% Arabic font is always loaded so RTL snippets can appear in English maps.
+\newfontfamily\arabicfont[
+  Path=<< font_dir >>,
+  Script=Arabic,
+  BoldFont=<< arabic_font_bold_file >>,
+]{<< arabic_font_file >>}
 <% endif -%>
 
 \begin{document}

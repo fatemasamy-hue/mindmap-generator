@@ -26,8 +26,19 @@ COLOR_PRESETS = [
     "", "Pink1", "Peach1", "Olive1", "Sage1", "Blue1", "Purple1", "Rose1"
 ]
 
-BUNDLED_ARABIC_FONT_FILE = "arial.ttf"
-BUNDLED_ARABIC_FONT_LABEL = "Arial"
+# Bundled fonts — selected automatically by language (no UI override).
+BUNDLED_ARABIC_FONT_FILE = "Noto-Regular.ttf"
+BUNDLED_ARABIC_FONT_BOLD_FILE = "Noto-Bold.ttf"
+BUNDLED_ARABIC_FONT_LABEL = "Noto"
+
+BUNDLED_ENGLISH_FONT_FILE = "STIX2Text-Regular.otf"
+BUNDLED_ENGLISH_FONT_BOLD_FILE = "STIX2Text-Bold.otf"
+BUNDLED_ENGLISH_FONT_ITALIC_FILE = "STIX2Text-Italic.otf"
+BUNDLED_ENGLISH_FONT_BOLDITALIC_FILE = "STIX2Text-BoldItalic.otf"
+
+# Fixed output canvas size (points). Always applied; not user-editable.
+CANVAS_WIDTH_PT = 752
+CANVAS_HEIGHT_PT = 492
 
 # Current defaults baked into template.tex for each level's spacing/sizing.
 DEFAULT_LEVEL_STYLES = {
@@ -346,7 +357,7 @@ def google_sheet_url_to_csv_url(sheet_url):
 # Render + compile pipeline
 # --------------------------------------------------------------------------
 
-def render_tex(root, chart_shape, lang, child_path, arabic_font, template_dir, template_name="template.tex"):
+def render_tex(root, chart_shape, lang, child_path, template_dir, template_name="template.tex"):
     render_root = build_render_node(root, level=1)
     env = Environment(
         loader=FileSystemLoader(template_dir),
@@ -358,20 +369,23 @@ def render_tex(root, chart_shape, lang, child_path, arabic_font, template_dir, t
         lstrip_blocks=True,
     )
     template = env.get_template(template_name)
-    
+
     font_dir = template_dir.replace("\\", "/")
     if not font_dir.endswith("/"):
         font_dir += "/"
-        
+
     return template.render(
         root=render_root,
         shape=chart_shape,
         lang=lang,
         child_path=child_path,
-        arabic_font=arabic_font,
-        bundled_font_label=BUNDLED_ARABIC_FONT_LABEL,
-        bundled_font_file=BUNDLED_ARABIC_FONT_FILE,
         font_dir=font_dir,
+        arabic_font_file=BUNDLED_ARABIC_FONT_FILE,
+        arabic_font_bold_file=BUNDLED_ARABIC_FONT_BOLD_FILE,
+        english_font_file=BUNDLED_ENGLISH_FONT_FILE,
+        english_font_bold_file=BUNDLED_ENGLISH_FONT_BOLD_FILE,
+        english_font_italic_file=BUNDLED_ENGLISH_FONT_ITALIC_FILE,
+        english_font_bolditalic_file=BUNDLED_ENGLISH_FONT_BOLDITALIC_FILE,
     )
 
 
@@ -410,10 +424,10 @@ def check_dependencies():
     return problems
 
 
-def compile_mindmap(root, chart_shape, lang, child_path, arabic_font, work_dir, template_dir,
-                     fit_size_pt=None, dpi=300):
+def compile_mindmap(root, chart_shape, lang, child_path, work_dir, template_dir, dpi=300):
+    """Compile a mind map to PDF/PNG, always fitted to the fixed 752×492 pt canvas."""
     os.makedirs(work_dir, exist_ok=True)
-    tex_source = render_tex(root, chart_shape, lang, child_path, arabic_font, template_dir)
+    tex_source = render_tex(root, chart_shape, lang, child_path, template_dir)
 
     tex_path = os.path.join(work_dir, "output_chart.tex")
     with open(tex_path, "w", encoding="utf-8") as f:
@@ -431,11 +445,11 @@ def compile_mindmap(root, chart_shape, lang, child_path, arabic_font, work_dir, 
             ["xelatex", "-interaction=nonstopmode", "-halt-on-error", "output_chart.tex"],
             cwd=work_dir, capture_output=True, text=True, timeout=120,
         )
-        
+
         stdout_text = proc.stdout if proc.stdout else ""
         stderr_text = proc.stderr if proc.stderr else ""
         result["log"] = stdout_text[-4000:] + "\n" + stderr_text[-2000:]
-        
+
     except subprocess.TimeoutExpired:
         result["log"] = "xelatex timed out after 120 seconds."
         return result
@@ -451,8 +465,7 @@ def compile_mindmap(root, chart_shape, lang, child_path, arabic_font, work_dir, 
         images = convert_from_path(pdf_path, dpi=dpi)
         png_path = os.path.join(work_dir, "output_chart.png")
         images[0].save(png_path, "PNG")
-        if fit_size_pt:
-            fit_image_to_size(png_path, fit_size_pt[0], fit_size_pt[1], dpi)
+        fit_image_to_size(png_path, CANVAS_WIDTH_PT, CANVAS_HEIGHT_PT, dpi)
         result["png_path"] = png_path
         result["success"] = True
     except Exception as e:

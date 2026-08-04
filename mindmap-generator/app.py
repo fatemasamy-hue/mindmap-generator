@@ -1,3 +1,4 @@
+import base64
 import os
 import tempfile
 
@@ -10,6 +11,12 @@ st.set_page_config(page_title="Mind Map Generator", page_icon="🧠", layout="wi
 
 TEMPLATE_DIR = os.path.dirname(os.path.abspath(__file__))
 
+# Preview zoom only — never changes the fixed 752×492 pt canvas.
+ZOOM_MIN = 0.25
+ZOOM_MAX = 3.0
+ZOOM_STEP = 0.25
+ZOOM_DEFAULT = 1.0
+
 # --------------------------------------------------------------------------
 if "tree" not in st.session_state:
     st.session_state.tree = core.default_tree()
@@ -19,18 +26,12 @@ if "lang" not in st.session_state:
     st.session_state.lang = "en"
 if "child_path" not in st.session_state:
     st.session_state.child_path = "gradient"
-if "arabic_font" not in st.session_state:
-    st.session_state.arabic_font = "Arial"
 if "last_result" not in st.session_state:
     st.session_state.last_result = None
 if "tree_version" not in st.session_state:
     st.session_state.tree_version = 0
-if "fit_enabled" not in st.session_state:
-    st.session_state.fit_enabled = True
-if "fit_width_pt" not in st.session_state:
-    st.session_state.fit_width_pt = 800
-if "fit_height_pt" not in st.session_state:
-    st.session_state.fit_height_pt = 600
+if "preview_zoom" not in st.session_state:
+    st.session_state.preview_zoom = ZOOM_DEFAULT
 if "import_message" not in st.session_state:
     st.session_state.import_message = None
 
@@ -69,37 +70,15 @@ with st.sidebar:
         index=["gradient", "grey"].index(st.session_state.child_path),
     )
 
-    font_options = [core.BUNDLED_ARABIC_FONT_LABEL, "Arial", "Custom…"]
-    current_font = st.session_state.arabic_font
-    is_custom_font = current_font not in font_options
-    font_index = font_options.index("Custom…") if is_custom_font else font_options.index(current_font)
-    font_choice = st.selectbox(
-        "Arabic font", font_options, index=font_index,
-        help=(
-            "Used even in English mode, so Arabic text can still be embedded inline. "
-            "'Bundled' ships with this app and always works, regardless of server. "
-            "'Arial' only works on machines that actually have it installed (Windows/Mac, not most Linux)."
-        ),
-    )
-    if font_choice == "Custom…":
-        st.session_state.arabic_font = st.text_input(
-            "Custom font name (must be installed on this machine)",
-            value=current_font if is_custom_font else "",
-        )
-    else:
-        st.session_state.arabic_font = font_choice
+    font_label = "Noto (Regular / Bold)" if st.session_state.lang == "ar" else "STIX2Text"
+    st.caption(f"Font (auto): **{font_label}** — chosen from the selected language.")
 
     st.divider()
-    st.subheader("🖼️ Output size")
-    st.caption("Fit the mind map to an exact size — handy for dropping into slides.")
-    st.session_state.fit_enabled = st.checkbox("Fit to exact size", value=st.session_state.fit_enabled)
-    if st.session_state.fit_enabled:
-        c1, c2 = st.columns(2)
-        with c1:
-            st.session_state.fit_width_pt = st.number_input("Width (pt)", min_value=50, value=st.session_state.fit_width_pt, step=10)
-        with c2:
-            st.session_state.fit_height_pt = st.number_input("Height (pt)", min_value=50, value=st.session_state.fit_height_pt, step=10)
-        st.caption("The map is scaled down to fit inside this box (never distorted) and padded to this exact size.")
+    st.subheader("🖼️ Canvas size")
+    st.caption(
+        f"Output is always **{core.CANVAS_WIDTH_PT}×{core.CANVAS_HEIGHT_PT} pt**. "
+        "Use ➖ / ➕ in the preview panel to zoom the view only."
+    )
 
     st.divider()
     if st.button("🗑️ Reset mind map", use_container_width=True):
@@ -316,6 +295,59 @@ def _fullscreen_dialog(png_path):
     st.image(png_path, use_container_width=True)
 
 
+def _preview_with_safe_area(png_path, zoom):
+    """Show the preview at the given visual zoom with a dashed 752×492 safe-area guide."""
+    # Base display width ≈ canvas pts at 100% zoom (1 pt ≈ 1 CSS px for guide fidelity).
+    display_w = max(1, int(round(core.CANVAS_WIDTH_PT * zoom)))
+    aspect = f"{core.CANVAS_WIDTH_PT} / {core.CANVAS_HEIGHT_PT}"
+
+    with open(png_path, "rb") as f:
+        b64 = base64.b64encode(f.read()).decode("ascii")
+
+    st.caption(
+        f"Safe area: {core.CANVAS_WIDTH_PT}×{core.CANVAS_HEIGHT_PT} pt "
+        f"(dashed border) · preview zoom {zoom:.0%}"
+    )
+    st.markdown(
+        f"""
+        <div style="
+            display: inline-block;
+            width: {display_w}px;
+            max-width: 100%;
+            overflow: auto;
+            line-height: 0;
+        ">
+          <div style="
+            position: relative;
+            width: 100%;
+            aspect-ratio: {aspect};
+            box-sizing: border-box;
+            border: 2px dashed #6b7280;
+            background:
+              linear-gradient(to right, rgba(107,114,128,0.15) 1px, transparent 1px) 0 0 / 25% 100%,
+              linear-gradient(to bottom, rgba(107,114,128,0.15) 1px, transparent 1px) 0 0 / 100% 25%,
+              #ffffff;
+            box-shadow: inset 0 0 0 1px rgba(107,114,128,0.2);
+          ">
+            <img
+              src="data:image/png;base64,{b64}"
+              alt="Mind map preview"
+              style="
+                position: absolute;
+                inset: 0;
+                width: 100%;
+                height: 100%;
+                object-fit: contain;
+                display: block;
+              "
+            />
+          </div>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+
+
 def render_preview_panel():
     st.subheader("🖼️ Preview & Export")
 
@@ -329,21 +361,34 @@ def render_preview_panel():
     if not st.session_state.tree["text"].strip():
         st.info("Give your root topic some text in the Manual Builder first.")
 
+    # Zoom controls also live here so they're next to the preview.
+    z1, z2, z3 = st.columns([1, 1, 3])
+    with z1:
+        if st.button("➖", key="preview_zoom_out", use_container_width=True,
+                     disabled=st.session_state.preview_zoom <= ZOOM_MIN):
+            st.session_state.preview_zoom = max(ZOOM_MIN, round(st.session_state.preview_zoom - ZOOM_STEP, 2))
+            st.rerun()
+    with z2:
+        if st.button("➕", key="preview_zoom_in", use_container_width=True,
+                     disabled=st.session_state.preview_zoom >= ZOOM_MAX):
+            st.session_state.preview_zoom = min(ZOOM_MAX, round(st.session_state.preview_zoom + ZOOM_STEP, 2))
+            st.rerun()
+    with z3:
+        st.caption(
+            f"Zoom {st.session_state.preview_zoom:.0%} · "
+            f"canvas {core.CANVAS_WIDTH_PT}×{core.CANVAS_HEIGHT_PT} pt (fixed)"
+        )
+
     if st.button("🚀 Generate mind map", type="primary", disabled=bool(deps_missing), key="generate_btn"):
         with st.spinner("Compiling LaTeX and rendering image…"):
             work_dir = tempfile.mkdtemp(prefix="mindmap_")
-            fit_size = None
-            if st.session_state.fit_enabled:
-                fit_size = (st.session_state.fit_width_pt, st.session_state.fit_height_pt)
             result = core.compile_mindmap(
                 st.session_state.tree,
                 st.session_state.chart_shape,
                 st.session_state.lang,
                 st.session_state.child_path,
-                st.session_state.arabic_font,
                 work_dir,
                 TEMPLATE_DIR,
-                fit_size_pt=fit_size,
             )
             st.session_state.last_result = result
 
@@ -351,7 +396,7 @@ def render_preview_panel():
     if result:
         if result["success"]:
             st.success("Done!")
-            st.image(result["png_path"], caption="Preview", use_container_width=True)
+            _preview_with_safe_area(result["png_path"], st.session_state.preview_zoom)
 
             if st.button("🔍 Fullscreen", key="fullscreen_btn"):
                 _fullscreen_dialog(result["png_path"])
