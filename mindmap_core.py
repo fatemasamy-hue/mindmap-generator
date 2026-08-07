@@ -1,5 +1,4 @@
 """
-
 Core logic for the Mind Map Generator app.
 Handles the node data model, CSV / Google Sheet parsing, LaTeX escaping,
 and the render -> xelatex -> PNG pipeline.
@@ -176,7 +175,6 @@ def compute_fill(box_color):
     if box_color_clean.lower() == "white":
         return "white"
         
-    # Return the exact color name (no opacity shades needed anymore)
     return box_color_clean
 
 
@@ -189,7 +187,6 @@ def build_render_node(node, level, parent_color=""):
     elif level == 2 and not raw_color:
         raw_color = "Blue1" # Fallback if Level 2 is left blank
     elif level >= 3:
-        # Automatically map "1" colors to "2" colors (e.g. Pink1 -> Pink2)
         if parent_color and parent_color.endswith("1"):
             raw_color = parent_color[:-1] + "2"
         else:
@@ -283,7 +280,7 @@ def parse_csv_text_to_tree(csv_text):
         node = new_node(
             text=l1 or l2 or l3,
             box_color=box_color,
-            text_color="black", # Implicitly forced to black
+            text_color="black",
             icon=icon,
             custom=custom,
         )
@@ -358,7 +355,6 @@ def google_sheet_url_to_csv_url(sheet_url):
 # Render + compile pipeline
 # --------------------------------------------------------------------------
 
-# --- Replace the existing render_tex function with this ---
 def render_tex(root, chart_shape, lang, child_path, layout_mode, edge_style, template_dir, template_name="template.tex"):
     render_root = build_render_node(root, level=1)
     env = Environment(
@@ -391,8 +387,6 @@ def render_tex(root, chart_shape, lang, child_path, layout_mode, edge_style, tem
         english_font_italic_file=BUNDLED_ENGLISH_FONT_ITALIC_FILE,
         english_font_bolditalic_file=BUNDLED_ENGLISH_FONT_BOLDITALIC_FILE,
     )
-
-
 
 
 def fit_image_to_size(png_path, target_width_pt, target_height_pt, dpi):
@@ -434,7 +428,6 @@ def compile_mindmap(root, chart_shape, lang, child_path, layout_mode, edge_style
     """Compile a mind map to PDF/PNG, always fitted to the fixed 752×492 pt canvas."""
     os.makedirs(work_dir, exist_ok=True)
     tex_source = render_tex(root, chart_shape, lang, child_path, layout_mode, edge_style, template_dir)
-
 
     tex_path = os.path.join(work_dir, "output_chart.tex")
     with open(tex_path, "w", encoding="utf-8") as f:
