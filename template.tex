@@ -1,5 +1,5 @@
 \documentclass[tikz,border={24pt 24pt 24pt 60pt}]{standalone}
-\usetikzlibrary{mindmap, trees, arrows.meta, shapes.geometric} % <-- Added arrows and shapes
+\usetikzlibrary{mindmap, trees, arrows.meta, shapes.geometric}
 \usepackage{fontawesome5}
 
 % --- NAGWA BRAND COLORS ---
@@ -20,7 +20,7 @@
 \definecolor{Fushia}{RGB}{225,50,162}
 
 % Fill Colors
-\definecolor{RootGrey}{HTML}{E0E0E0} % <-- Replace E0E0E0 with your exact grey pastel hex code
+\definecolor{RootGrey}{HTML}{E0E0E0}
 \definecolor{Pink1}{HTML}{F4D4E1}
 \definecolor{Pink2}{HTML}{F7E2EB}
 \definecolor{Peach1}{HTML}{F6C9A0}
@@ -37,9 +37,6 @@
 \definecolor{Rose2}{HTML}{FFD4DD}
 
 % --- BILINGUAL SETUP ---
-% Fonts are chosen automatically by language:
-%   Arabic → Noto (Regular / Bold)
-%   English → STIX2Text family
 \usepackage{polyglossia}
 <% if lang == 'ar' -%>
 \setmainlanguage{arabic}
@@ -64,7 +61,6 @@
   ItalicFont=<< english_font_italic_file >>,
   BoldItalicFont=<< english_font_bolditalic_file >>,
 ]{<< english_font_file >>}
-% Arabic font is always loaded so RTL snippets can appear in English maps.
 \newfontfamily\arabicfont[
   Path=<< font_dir >>,
   Script=Arabic,
@@ -94,18 +90,18 @@
         edge from parent path={(\tikzparentnode) -- (\tikzchildnode)},
         edge from parent/.style={draw, black!50, thin}
     },
-    color logic child/.style={},
+    color logic child/.style args={#1}{},
     color logic node/.style={fill=#1},
     <% else -%>
     every node/.style={concept, inner sep=3pt, align=center, execute at begin node={<< text_dir >>\hyphenpenalty=10000}},
     <% if child_path == 'grey' -%>
     concept color=black!10,
-    color logic child/.style={},
+    color logic child/.style args={#1}{},
     color logic node/.style={fill=#1},
     <% else -%>
     concept color=<< root.fill >>,
     color logic child/.style={concept color=#1},
-    color logic node/.style={},
+    color logic node/.style args={#1}{},
     <% endif -%>
     <% endif -%>
     level 1/.append style={
@@ -115,7 +111,7 @@
         <% if lang == 'ar' -%>counterclockwise from=90,<% else -%>clockwise from=90,<% endif -%>
         <% endif -%>
         text width=3cm,
-        font=\fontsize{13.5pt}{16.2pt}\selectfont\bfseries,
+        font={\fontsize{13.5pt}{16.2pt}\selectfont\bfseries},
         inner sep=10pt,
         minimum size=2.25cm
     },
@@ -123,7 +119,7 @@
         level distance=6cm,
         sibling angle=45,
         text width=3.5cm,
-        font=\fontsize{12pt}{14.4pt}\selectfont\bfseries,
+        font={\fontsize{12pt}{14.4pt}\selectfont\bfseries},
         inner sep=10pt,
         minimum size=1.75cm
     },
@@ -131,34 +127,31 @@
         level distance=6cm,
         sibling angle=90,
         text width=2.5cm,
-        font=\fontsize{12pt}{14.4pt}\selectfont\bfseries,
+        font={\fontsize{12pt}{14.4pt}\selectfont\bfseries},
         inner sep=10pt,
         minimum size=1.15cm
     }
 <% else -%>
-    % --- VERTICAL & HORIZONTAL TREES ---
     <% if layout_mode == 'vertical' -%>
     grow=down,
-    level 1/.style={sibling distance=6.5cm, level distance=3cm},
-    level 2/.style={sibling distance=3.5cm, level distance=3cm},
-    level 3/.style={sibling distance=2cm, level distance=3cm},
+    level 1/.append style={sibling distance=6.5cm, level distance=3cm},
+    level 2/.append style={sibling distance=3.5cm, level distance=3cm},
+    level 3/.append style={sibling distance=2cm, level distance=3cm},
     <% elif layout_mode == 'horizontal' -%>
     <% if lang == 'ar' %>grow=left,<% else %>grow=right,<% endif %>
-    level 1/.style={sibling distance=4cm, level distance=5.5cm},
-    level 2/.style={sibling distance=2.5cm, level distance=5cm},
-    level 3/.style={sibling distance=1.5cm, level distance=4.5cm},
+    level 1/.append style={sibling distance=4cm, level distance=5.5cm},
+    level 2/.append style={sibling distance=2.5cm, level distance=5cm},
+    level 3/.append style={sibling distance=1.5cm, level distance=4.5cm},
     <% endif -%>
-    % Node Styles for Trees
     every node/.style={
-        <% if shape == 'rectangle' %>rectangle, rounded corners=3pt,<% else %>circle,<% endif %>
+        <% if shape == 'rectangle' %>rectangle, rounded corners=3pt, inner xsep=10pt, inner ysep=10pt,<% else %>circle, inner sep=10pt,<% endif %>
         text width=3.5cm,
-        font=\fontsize{12pt}{14.4pt}\selectfont\bfseries,
-        inner xsep=10pt, inner ysep=10pt, align=center,
+        font={\fontsize{12pt}{14.4pt}\selectfont\bfseries},
+        align=center,
         execute at begin node={<< text_dir >>\hyphenpenalty=10000}
     },
     color logic node/.style={fill=#1, draw=black!20, thick},
-    color logic child/.style={},
-    % Edge Styles for Trees
+    color logic child/.style args={#1}{},
     <% if edge_style == 'orthogonal' -%>
         <% if layout_mode == 'vertical' -%>
         edge from parent path={(\tikzparentnode.south) -- +(0,-0.5) -| (\tikzchildnode.north)},
@@ -169,12 +162,11 @@
         edge from parent path={(\tikzparentnode.east) -- +(0.5,0) |- (\tikzchildnode.west)},
         <% endif %>
         <% endif -%>
-        edge from parent/.style={draw, black!60, thick},
+        edge from parent/.append style={draw, black!60, thick},
     <% elif edge_style == 'arrows' -%>
         edge from parent path={(\tikzparentnode) -- (\tikzchildnode)},
-        edge from parent/.style={draw, black!60, thick, -{Stealth[scale=1.2]}},
+        edge from parent/.append style={draw, black!60, thick, -Stealth},
     <% else -%>
-        % Standard smooth curve
         <% if layout_mode == 'vertical' -%>
         edge from parent path={(\tikzparentnode.south) .. controls +(0,-1.5) and +(0,1.5) .. (\tikzchildnode.north)},
         <% else -%>
@@ -184,14 +176,12 @@
         edge from parent path={(\tikzparentnode.east) .. controls +(1.5,0) and +(-1.5,0) .. (\tikzchildnode.west)},
         <% endif %>
         <% endif -%>
-        edge from parent/.style={draw, black!60, thick},
+        edge from parent/.append style={draw, black!60, thick}
     <% endif -%>
 <% endif -%>
 ]
 
-  \node[color logic node=<< root.fill >> ... % (Keep your existing node loop logic from here down)
-
-  \node[color logic node=<< root.fill >>, text=<< root.text_color >>, font=\fontsize{13.5pt}{16.2pt}\selectfont\bfseries, inner sep=10pt, minimum size=2.25cm<% if root.custom %>, << root.custom >><% endif %>] {
+  \node[color logic node=<< root.fill >>, text=<< root.text_color >>, font={\fontsize{13.5pt}{16.2pt}\selectfont\bfseries}, inner sep=10pt, minimum size=2.25cm<% if root.custom %>, << root.custom >><% endif %>] {
     <% if root.icon %>\LR{\huge\faIcon{<< root.icon >>}}\\[0.5ex]<% endif %><< root.text >>
   }
     <% for child in root.children %>
