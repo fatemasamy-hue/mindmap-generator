@@ -1,5 +1,5 @@
 \documentclass[tikz,border={24pt 24pt 24pt 60pt}]{standalone}
-\usetikzlibrary{mindmap, trees}
+\usetikzlibrary{mindmap, trees, arrows.meta, shapes.geometric} % <-- Added arrows and shapes
 \usepackage{fontawesome5}
 
 % --- NAGWA BRAND COLORS ---
@@ -85,6 +85,7 @@
 <% endfor -%>
 
 \begin{tikzpicture}[
+<% if layout_mode == 'radial' -%>
     grow cyclic,
     mindmap,
     <% if shape == 'rectangle' -%>
@@ -134,7 +135,63 @@
         inner sep=10pt,
         minimum size=1.15cm
     }
+<% else -%>
+    % --- VERTICAL & HORIZONTAL TREES ---
+    <% if layout_mode == 'vertical' -%>
+    grow=down,
+    level 1/.style={sibling distance=6.5cm, level distance=3cm},
+    level 2/.style={sibling distance=3.5cm, level distance=3cm},
+    level 3/.style={sibling distance=2cm, level distance=3cm},
+    <% elif layout_mode == 'horizontal' -%>
+    <% if lang == 'ar' %>grow=left,<% else %>grow=right,<% endif %>
+    level 1/.style={sibling distance=4cm, level distance=5.5cm},
+    level 2/.style={sibling distance=2.5cm, level distance=5cm},
+    level 3/.style={sibling distance=1.5cm, level distance=4.5cm},
+    <% endif -%>
+
+    % Node Styles for Trees
+    every node/.style={
+        <% if shape == 'rectangle' %>rectangle, rounded corners=3pt,<% else %>circle,<% endif %>
+        text width=3.5cm,
+        font=\fontsize{12pt}{14.4pt}\selectfont\bfseries,
+        inner xsep=10pt, inner ysep=10pt, align=center,
+        execute at begin node={<< text_dir >>\hyphenpenalty=10000}
+    },
+    color logic node/.style={fill=#1, draw=black!20, thick},
+    color logic child/.style={},
+
+    % Edge Styles for Trees
+    <% if edge_style == 'orthogonal' -%>
+        <% if layout_mode == 'vertical' -%>
+        edge from parent path={(\tikzparentnode.south) -- +(0,-0.5) -| (\tikzchildnode.north)},
+        <% else -%>
+        <% if lang == 'ar' %>
+        edge from parent path={(\tikzparentnode.west) -- +(-0.5,0) |- (\tikzchildnode.east)},
+        <% else %>
+        edge from parent path={(\tikzparentnode.east) -- +(0.5,0) |- (\tikzchildnode.west)},
+        <% endif %>
+        <% endif -%>
+        edge from parent/.style={draw, black!60, thick},
+    <% elif edge_style == 'arrows' -%>
+        edge from parent path={(\tikzparentnode) -- (\tikzchildnode)},
+        edge from parent/.style={draw, black!60, thick, -{Stealth[scale=1.2]}},
+    <% else -%>
+        % Standard smooth curve
+        <% if layout_mode == 'vertical' -%>
+        edge from parent path={(\tikzparentnode.south) .. controls +(0,-1.5) and +(0,1.5) .. (\tikzchildnode.north)},
+        <% else -%>
+        <% if lang == 'ar' %>
+        edge from parent path={(\tikzparentnode.west) .. controls +(-1.5,0) and +(1.5,0) .. (\tikzchildnode.east)},
+        <% else %>
+        edge from parent path={(\tikzparentnode.east) .. controls +(1.5,0) and +(-1.5,0) .. (\tikzchildnode.west)},
+        <% endif %>
+        <% endif -%>
+        edge from parent/.style={draw, black!60, thick},
+    <% endif -%>
+<% endif -%>
 ]
+
+  \node[color logic node=<< root.fill >> ... % (Keep your existing node loop logic from here down)
 
   \node[color logic node=<< root.fill >>, text=<< root.text_color >>, font=\fontsize{13.5pt}{16.2pt}\selectfont\bfseries, inner sep=10pt, minimum size=2.25cm<% if root.custom %>, << root.custom >><% endif %>] {
     <% if root.icon %>\LR{\huge\faIcon{<< root.icon >>}}\\[0.5ex]<% endif %><< root.text >>
