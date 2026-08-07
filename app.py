@@ -34,7 +34,10 @@ if "preview_zoom" not in st.session_state:
     st.session_state.preview_zoom = ZOOM_DEFAULT
 if "import_message" not in st.session_state:
     st.session_state.import_message = None
-
+if "layout_mode" not in st.session_state:
+    st.session_state.layout_mode = "radial"
+if "edge_style" not in st.session_state:
+    st.session_state.edge_style = "standard"
 
 def reset_all():
     st.session_state.tree = core.default_tree()
