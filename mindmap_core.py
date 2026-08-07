@@ -358,7 +358,8 @@ def google_sheet_url_to_csv_url(sheet_url):
 # Render + compile pipeline
 # --------------------------------------------------------------------------
 
-def render_tex(root, chart_shape, lang, child_path, template_dir, template_name="template.tex"):
+# --- Replace the existing render_tex function with this ---
+def render_tex(root, chart_shape, lang, child_path, layout_mode, edge_style, template_dir, template_name="template.tex"):
     render_root = build_render_node(root, level=1)
     env = Environment(
         loader=FileSystemLoader(template_dir),
@@ -380,6 +381,8 @@ def render_tex(root, chart_shape, lang, child_path, template_dir, template_name=
         shape=chart_shape,
         lang=lang,
         child_path=child_path,
+        layout_mode=layout_mode,
+        edge_style=edge_style,
         font_dir=font_dir,
         arabic_font_file=BUNDLED_ARABIC_FONT_FILE,
         arabic_font_bold_file=BUNDLED_ARABIC_FONT_BOLD_FILE,
@@ -388,6 +391,8 @@ def render_tex(root, chart_shape, lang, child_path, template_dir, template_name=
         english_font_italic_file=BUNDLED_ENGLISH_FONT_ITALIC_FILE,
         english_font_bolditalic_file=BUNDLED_ENGLISH_FONT_BOLDITALIC_FILE,
     )
+
+
 
 
 def fit_image_to_size(png_path, target_width_pt, target_height_pt, dpi):
@@ -425,10 +430,11 @@ def check_dependencies():
     return problems
 
 
-def compile_mindmap(root, chart_shape, lang, child_path, work_dir, template_dir, dpi=300):
+def compile_mindmap(root, chart_shape, lang, child_path, layout_mode, edge_style, work_dir, template_dir, dpi=300):
     """Compile a mind map to PDF/PNG, always fitted to the fixed 752×492 pt canvas."""
     os.makedirs(work_dir, exist_ok=True)
-    tex_source = render_tex(root, chart_shape, lang, child_path, template_dir)
+    tex_source = render_tex(root, chart_shape, lang, child_path, layout_mode, edge_style, template_dir)
+
 
     tex_path = os.path.join(work_dir, "output_chart.tex")
     with open(tex_path, "w", encoding="utf-8") as f:
