@@ -363,6 +363,8 @@ def render_tex(root, chart_shape, lang, child_path, layout_mode, edge_style, tem
         block_end_string="%>",
         variable_start_string="<<",
         variable_end_string=">>",
+        comment_start_string="<#",   # <-- Added to prevent collision with LaTeX {#1}
+        comment_end_string="#>",     # <-- Added to prevent collision with LaTeX {#1}
         trim_blocks=True,
         lstrip_blocks=True,
     )
