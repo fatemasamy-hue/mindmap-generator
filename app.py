@@ -26,6 +26,10 @@ if "lang" not in st.session_state:
     st.session_state.lang = "en"
 if "child_path" not in st.session_state:
     st.session_state.child_path = "gradient"
+if "layout_mode" not in st.session_state:
+    st.session_state.layout_mode = "radial"
+if "edge_style" not in st.session_state:
+    st.session_state.edge_style = "standard"
 if "last_result" not in st.session_state:
     st.session_state.last_result = None
 if "tree_version" not in st.session_state:
@@ -34,10 +38,7 @@ if "preview_zoom" not in st.session_state:
     st.session_state.preview_zoom = ZOOM_DEFAULT
 if "import_message" not in st.session_state:
     st.session_state.import_message = None
-if "layout_mode" not in st.session_state:
-    st.session_state.layout_mode = "radial"
-if "edge_style" not in st.session_state:
-    st.session_state.edge_style = "standard"
+
 
 def reset_all():
     st.session_state.tree = core.default_tree()
@@ -78,13 +79,13 @@ with st.sidebar:
         index=["radial", "vertical", "horizontal"].index(st.session_state.layout_mode),
         help="Change the overall structure from a circular map to a top-down or left-to-right tree."
     )
-    
     st.session_state.edge_style = st.radio(
         "Connection lines", ["standard", "orthogonal", "arrows"],
         format_func=lambda v: {"standard": "Standard (Curved)", "orthogonal": "Orthogonal (Right Angles)", "arrows": "Straight with Arrows"}[v],
         index=["standard", "orthogonal", "arrows"].index(st.session_state.edge_style),
         help="Only applies to Vertical and Horizontal tree layouts."
     )
+
     font_label = "Noto (Regular / Bold)" if st.session_state.lang == "ar" else "STIX2Text"
     st.caption(f"Font (auto): **{font_label}** — chosen from the selected language.")
 
@@ -312,7 +313,6 @@ def _fullscreen_dialog(png_path):
 
 def _preview_with_safe_area(png_path, zoom):
     """Show the preview at the given visual zoom with a dashed 752×492 safe-area guide."""
-    # Base display width ≈ canvas pts at 100% zoom (1 pt ≈ 1 CSS px for guide fidelity).
     display_w = max(1, int(round(core.CANVAS_WIDTH_PT * zoom)))
     aspect = f"{core.CANVAS_WIDTH_PT} / {core.CANVAS_HEIGHT_PT}"
 
@@ -323,8 +323,6 @@ def _preview_with_safe_area(png_path, zoom):
         f"Safe area: {core.CANVAS_WIDTH_PT}×{core.CANVAS_HEIGHT_PT} pt "
         f"(dashed border) · preview zoom {zoom:.0%}"
     )
-    # Outer scroller is width:100% of the panel; inner box uses zoomed pixel size
-    # (no max-width clamp) so zoom past ~panel width actually enlarges and scrolls.
     st.markdown(
         f"""
         <div style="
@@ -376,7 +374,6 @@ def render_preview_panel():
     if not st.session_state.tree["text"].strip():
         st.info("Give your root topic some text in the Manual Builder first.")
 
-    # Zoom controls also live here so they're next to the preview.
     z1, z2, z3 = st.columns([1, 1, 3])
     with z1:
         if st.button("➖", key="preview_zoom_out", use_container_width=True,
@@ -402,7 +399,7 @@ def render_preview_panel():
                 st.session_state.chart_shape,
                 st.session_state.lang,
                 st.session_state.child_path,
-                st.session_state.layout_mode, 
+                st.session_state.layout_mode,
                 st.session_state.edge_style,
                 work_dir,
                 TEMPLATE_DIR,
