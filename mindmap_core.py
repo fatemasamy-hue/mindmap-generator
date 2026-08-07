@@ -16,7 +16,7 @@ import uuid
 from jinja2 import Environment, FileSystemLoader
 
 CSV_HEADER = [
-    "Level1", "Level2", "Level3", "BoxColor", 
+    "Level1", "Level2", "Level3", "Level4", "Level5", "BoxColor", 
     "Icon", "ChartShape", "Lang", "ChildPath", "CustomSettings",
 ]
 
@@ -207,7 +207,7 @@ def build_render_node(node, level, parent_color=""):
 # --------------------------------------------------------------------------
 
 EXPECTED_HEADERS = {
-    "level1": "l1", "level2": "l2", "level3": "l3",
+    "level1": "l1", "level2": "l2", "level3": "l3", "level4": "l4", "level5": "l5",
     "boxcolor": "box_color", "icon": "icon",
     "chartshape": "chart_shape", "lang": "lang", "language": "lang",
     "childpath": "child_path", "customsettings": "custom",
@@ -243,8 +243,8 @@ def parse_csv_text_to_tree(csv_text):
         data_rows = rows[header_idx + 1:]
     else:
         col_map = {
-            "l1": 0, "l2": 1, "l3": 2, "box_color": 3,
-            "icon": 4, "chart_shape": 5, "lang": 6, "child_path": 7, "custom": 8,
+            "l1": 0, "l2": 1, "l3": 2, "l4": 3, "l5": 4, "box_color": 5,
+            "icon": 6, "chart_shape": 7, "lang": 8, "child_path": 9, "custom": 10,
         }
         data_rows = rows[1:]
 
@@ -256,33 +256,28 @@ def parse_csv_text_to_tree(csv_text):
 
     root = None
     current_l2 = None
+    current_l3 = None
+    current_l4 = None
     settings = {"chart_shape": "circle", "lang": "en", "child_path": "gradient"}
 
     for row in data_rows:
         if not any(c.strip() for c in row):
             continue
 
-        l1, l2, l3 = get(row, "l1"), get(row, "l2"), get(row, "l3")
-        box_color, icon, custom = (
-            get(row, "box_color"), get(row, "icon"), get(row, "custom"),
-        )
+        l1, l2, l3, l4, l5 = get(row, "l1"), get(row, "l2"), get(row, "l3"), get(row, "l4"), get(row, "l5")
+        box_color, icon, custom = get(row, "box_color"), get(row, "icon"), get(row, "custom")
         chart_shape, lang, child_path = get(row, "chart_shape"), get(row, "lang"), get(row, "child_path")
 
-        if l1:
-            level = 1
-        elif l2:
-            level = 2
-        elif l3:
-            level = 3
-        else:
-            continue
+        if l1: level = 1
+        elif l2: level = 2
+        elif l3: level = 3
+        elif l4: level = 4
+        elif l5: level = 5
+        else: continue
 
         node = new_node(
-            text=l1 or l2 or l3,
-            box_color=box_color,
-            text_color="black",
-            icon=icon,
-            custom=custom,
+            text=l1 or l2 or l3 or l4 or l5,
+            box_color=box_color, text_color="black", icon=icon, custom=custom,
         )
 
         if level == 1:
@@ -290,20 +285,26 @@ def parse_csv_text_to_tree(csv_text):
             settings["chart_shape"] = "rectangle" if "rect" in chart_shape.lower() else "circle"
             settings["lang"] = "ar" if "ar" in lang.lower() else "en"
             settings["child_path"] = "grey" if "grey" in child_path.lower() or "gray" in child_path.lower() else "gradient"
-            current_l2 = None
+            current_l2 = current_l3 = current_l4 = None
         elif level == 2:
-            if root is None:
-                return None, {}, "Found a Level 2 entry before any Level 1 (root) row."
+            if root is None: return None, {}, "Found Level 2 before Level 1."
             root["children"].append(node)
             current_l2 = node
+            current_l3 = current_l4 = None
         elif level == 3:
-            if current_l2 is None:
-                return None, {}, "Found a Level 3 entry with no preceding Level 2 parent."
+            if current_l2 is None: return None, {}, "Found Level 3 with no Level 2 parent."
             current_l2["children"].append(node)
+            current_l3 = node
+            current_l4 = None
+        elif level == 4:
+            if current_l3 is None: return None, {}, "Found Level 4 with no Level 3 parent."
+            current_l3["children"].append(node)
+            current_l4 = node
+        elif level == 5:
+            if current_l4 is None: return None, {}, "Found Level 5 with no Level 4 parent."
+            current_l4["children"].append(node)
 
-    if root is None:
-        return None, {}, "No Level1 (root) row found. Exactly one row needs a value in the Level1 column."
-
+    if root is None: return None, {}, "No Level1 (root) row found."
     return root, settings, None
 
 
@@ -312,24 +313,19 @@ def tree_to_csv_text(root, chart_shape, lang, child_path):
     writer = csv.writer(buf)
     writer.writerow(CSV_HEADER)
     writer.writerow([
-        root.get("text", ""), "", "",
+        root.get("text", ""), "", "", "", "",
         root.get("box_color", ""), root.get("icon", ""),
         chart_shape, lang, child_path, root.get("custom", ""),
     ])
-    for child in root.get("children", []):
-        writer.writerow([
-            "", child.get("text", ""), "",
-            child.get("box_color", ""), child.get("icon", ""),
-            "", "", "", child.get("custom", ""),
-        ])
-        for grandchild in child.get("children", []):
-            writer.writerow([
-                "", "", grandchild.get("text", ""),
-                grandchild.get("box_color", ""), grandchild.get("icon", ""),
-                "", "", "", grandchild.get("custom", ""),
-            ])
+    for c2 in root.get("children", []):
+        writer.writerow(["", c2.get("text", ""), "", "", "", c2.get("box_color", ""), c2.get("icon", ""), "", "", "", c2.get("custom", "")])
+        for c3 in c2.get("children", []):
+            writer.writerow(["", "", c3.get("text", ""), "", "", c3.get("box_color", ""), c3.get("icon", ""), "", "", "", c3.get("custom", "")])
+            for c4 in c3.get("children", []):
+                writer.writerow(["", "", "", c4.get("text", ""), "", c4.get("box_color", ""), c4.get("icon", ""), "", "", "", c4.get("custom", "")])
+                for c5 in c4.get("children", []):
+                    writer.writerow(["", "", "", "", c5.get("text", ""), c5.get("box_color", ""), c5.get("icon", ""), "", "", "", c5.get("custom", "")])
     return buf.getvalue()
-
 
 def sample_csv_template_text():
     sample_root = new_node(text="Central Topic", box_color="Blue1", icon="lightbulb")
