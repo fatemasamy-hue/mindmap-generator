@@ -110,49 +110,50 @@
         <% if not ns.has_level_3 and n % 2 != 0 -%>
         <% if lang == 'ar' -%>counterclockwise from=90,<% else -%>clockwise from=90,<% endif -%>
         <% endif -%>
-        text width=3cm,
-        font={\fontsize{13.5pt}{16.2pt}\selectfont\bfseries},
-        inner sep=10pt,
-        minimum size=2.25cm
+        text width=3cm, font={\fontsize{13.5pt}{16.2pt}\selectfont\bfseries}, inner sep=10pt, minimum size=2.25cm
     },
     level 2/.append style={
-        level distance=6cm,
-        sibling angle=45,
-        text width=3.5cm,
-        font={\fontsize{12pt}{14.4pt}\selectfont\bfseries},
-        inner sep=10pt,
-        minimum size=1.75cm
+        level distance=6cm, sibling angle=45,
+        text width=3.5cm, font={\fontsize{12pt}{14.4pt}\selectfont\bfseries}, inner sep=10pt, minimum size=1.75cm
     },
     level 3/.append style={
-        level distance=6cm,
-        sibling angle=90,
-        text width=2.5cm,
-        font={\fontsize{12pt}{14.4pt}\selectfont\bfseries},
-        inner sep=10pt,
-        minimum size=1.15cm
+        level distance=6cm, sibling angle=90,
+        text width=2.5cm, font={\fontsize{12pt}{14.4pt}\selectfont\bfseries}, inner sep=10pt, minimum size=1.15cm
+    },
+    level 4/.append style={
+        level distance=5cm, sibling angle=45,
+        text width=2cm, font={\fontsize{10pt}{12pt}\selectfont\bfseries}, inner sep=8pt, minimum size=1cm
+    },
+    level 5/.append style={
+        level distance=5cm, sibling angle=45,
+        text width=2cm, font={\fontsize{10pt}{12pt}\selectfont\bfseries}, inner sep=8pt, minimum size=0.8cm
     }
 <% else -%>
     <% if layout_mode == 'vertical' -%>
     grow=down,
-    level 1/.append style={sibling distance=6.5cm, level distance=3cm},
-    level 2/.append style={sibling distance=3.5cm, level distance=3cm},
-    level 3/.append style={sibling distance=2cm, level distance=3cm},
+    level 1/.append style={sibling distance=8cm, level distance=3cm},
+    level 2/.append style={sibling distance=4cm, level distance=3cm},
+    level 3/.append style={sibling distance=3.5cm, level distance=3cm},
+    level 4/.append style={sibling distance=2.5cm, level distance=2.5cm},
+    level 5/.append style={sibling distance=2cm, level distance=2.5cm},
     <% elif layout_mode == 'horizontal' -%>
     <% if lang == 'ar' %>grow=left,<% else %>grow=right,<% endif %>
-    level 1/.append style={sibling distance=4cm, level distance=5.5cm},
-    level 2/.append style={sibling distance=2.5cm, level distance=5cm},
-    level 3/.append style={sibling distance=1.5cm, level distance=4.5cm},
+    level 1/.append style={sibling distance=5cm, level distance=5.5cm},
+    level 2/.append style={sibling distance=4cm, level distance=5cm},
+    level 3/.append style={sibling distance=3cm, level distance=4.5cm},
+    level 4/.append style={sibling distance=2.5cm, level distance=4.5cm},
+    level 5/.append style={sibling distance=2cm, level distance=4cm},
     <% endif -%>
     every node/.style={
         <% if shape == 'rectangle' %>rectangle, rounded corners=3pt, inner xsep=10pt, inner ysep=10pt,<% else %>circle, inner sep=10pt,<% endif %>
-        text width=3.5cm,
+        text width=3cm,
         font={\fontsize{12pt}{14.4pt}\selectfont\bfseries},
         align=center,
         execute at begin node={<< text_dir >>\hyphenpenalty=10000}
     },
     color logic node/.style={fill=#1, draw=black!20, thick},
     color logic child/.style args={#1}{},
-    <% if edge_style == 'orthogonal' -%>
+    <% if edge_style == 'orthogonal' or edge_style == 'ortho_arrows' -%>
         <% if layout_mode == 'vertical' -%>
         edge from parent path={(\tikzparentnode.south) -- +(0,-0.5) -| (\tikzchildnode.north)},
         <% else -%>
@@ -162,10 +163,11 @@
         edge from parent path={(\tikzparentnode.east) -- +(0.5,0) |- (\tikzchildnode.west)},
         <% endif %>
         <% endif -%>
-        edge from parent/.append style={draw, black!60, thick},
-    <% elif edge_style == 'arrows' -%>
-        edge from parent path={(\tikzparentnode) -- (\tikzchildnode)},
+        <% if edge_style == 'ortho_arrows' -%>
         edge from parent/.append style={draw, black!60, thick, -Stealth},
+        <% else -%>
+        edge from parent/.append style={draw, black!60, thick},
+        <% endif -%>
     <% else -%>
         <% if layout_mode == 'vertical' -%>
         edge from parent path={(\tikzparentnode.south) .. controls +(0,-1.5) and +(0,1.5) .. (\tikzchildnode.north)},
@@ -192,7 +194,23 @@
           <% for grandchild in child.children %>
             child[color logic child=<< grandchild.fill >><% if grandchild.custom %>, << grandchild.custom >><% endif %>] { node[color logic node=<< grandchild.fill >>, text=<< grandchild.text_color >><% if grandchild.custom %>, << grandchild.custom >><% endif %>] {
               <% if grandchild.icon %>\LR{\LARGE\faIcon{<< grandchild.icon >>}}\\[0.5ex]<% endif %><< grandchild.text >>
-            } }
+            } 
+              <% if grandchild.children %>
+                <% for ggrandchild in grandchild.children %>
+                  child[color logic child=<< ggrandchild.fill >><% if ggrandchild.custom %>, << ggrandchild.custom >><% endif %>] { node[color logic node=<< ggrandchild.fill >>, text=<< ggrandchild.text_color >><% if ggrandchild.custom %>, << ggrandchild.custom >><% endif %>] {
+                    <% if ggrandchild.icon %>\LR{\large\faIcon{<< ggrandchild.icon >>}}\\[0.5ex]<% endif %><< ggrandchild.text >>
+                  } 
+                    <% if ggrandchild.children %>
+                      <% for gggrandchild in ggrandchild.children %>
+                        child[color logic child=<< gggrandchild.fill >><% if gggrandchild.custom %>, << gggrandchild.custom >><% endif %>] { node[color logic node=<< gggrandchild.fill >>, text=<< gggrandchild.text_color >><% if gggrandchild.custom %>, << gggrandchild.custom >><% endif %>] {
+                          <% if gggrandchild.icon %>\LR{\large\faIcon{<< gggrandchild.icon >>}}\\[0.5ex]<% endif %><< gggrandchild.text >>
+                        } }
+                      <% endfor %>
+                    <% endif %>
+                  }
+                <% endfor %>
+              <% endif %>
+            }
           <% endfor %>
         <% endif %>
       }
