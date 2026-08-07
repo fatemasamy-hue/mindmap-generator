@@ -80,9 +80,9 @@ with st.sidebar:
         help="Change the overall structure from a circular map to a top-down or left-to-right tree."
     )
     st.session_state.edge_style = st.radio(
-        "Connection lines", ["standard", "orthogonal", "arrows"],
-        format_func=lambda v: {"standard": "Standard (Curved)", "orthogonal": "Orthogonal (Right Angles)", "arrows": "Straight with Arrows"}[v],
-        index=["standard", "orthogonal", "arrows"].index(st.session_state.edge_style),
+        "Connection lines", ["standard", "orthogonal", "ortho_arrows"],
+        format_func=lambda v: {"standard": "Standard (Curved)", "orthogonal": "Orthogonal (Right Angles)", "ortho_arrows": "Orthogonal with Arrows"}[v],
+        index=["standard", "orthogonal", "ortho_arrows"].index(st.session_state.edge_style),
         help="Only applies to Vertical and Horizontal tree layouts."
     )
 
@@ -164,7 +164,6 @@ def render_manual_builder():
     v = st.session_state.tree_version
 
     st.subheader("Root topic")
-    # Wrapped root inside st.expander to make it foldable
     with st.expander(f"Root: {root['text'] or '(untitled)'}", expanded=True):
         node_editor(root, f"v{v}_root_{root['id']}", level=1)
 
@@ -186,6 +185,32 @@ def render_manual_builder():
                 with st.container(border=True):
                     st.caption(f"Sub-topic {j + 1}")
                     node_editor(grandchild, f"v{v}_l3_{grandchild['id']}", level=3)
+                    
+                    if st.button("➕ Add L4 detail", key=f"add_l4_{grandchild['id']}"):
+                        grandchild["children"].append(core.new_node())
+                        st.rerun()
+                        
+                    for k, ggrandchild in enumerate(list(grandchild["children"])):
+                        with st.container(border=True):
+                            st.caption(f"L4 Detail {k + 1}")
+                            node_editor(ggrandchild, f"v{v}_l4_{ggrandchild['id']}", level=4)
+                            
+                            if st.button("➕ Add L5 detail", key=f"add_l5_{ggrandchild['id']}"):
+                                ggrandchild["children"].append(core.new_node())
+                                st.rerun()
+                                
+                            for m, gggrandchild in enumerate(list(ggrandchild["children"])):
+                                with st.container(border=True):
+                                    st.caption(f"L5 Detail {m + 1}")
+                                    node_editor(gggrandchild, f"v{v}_l5_{gggrandchild['id']}", level=5)
+                                    if st.button("🗑️ Remove L5", key=f"rm_l5_{gggrandchild['id']}"):
+                                        ggrandchild["children"] = [c for c in ggrandchild["children"] if c["id"] != gggrandchild["id"]]
+                                        st.rerun()
+                                        
+                            if st.button("🗑️ Remove L4", key=f"rm_l4_{ggrandchild['id']}"):
+                                grandchild["children"] = [c for c in grandchild["children"] if c["id"] != ggrandchild["id"]]
+                                st.rerun()
+
                     if st.button("🗑️ Remove sub-topic", key=f"rm_l3_{grandchild['id']}"):
                         child["children"] = [c for c in child["children"] if c["id"] != grandchild["id"]]
                         st.rerun()
