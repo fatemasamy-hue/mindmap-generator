@@ -72,7 +72,19 @@ with st.sidebar:
         format_func=lambda v: "Gradient (branches inherit root color)" if v == "gradient" else "Grey (neutral branches)",
         index=["gradient", "grey"].index(st.session_state.child_path),
     )
-
+    st.session_state.layout_mode = st.radio(
+        "Layout structure", ["radial", "vertical", "horizontal"],
+        format_func=lambda v: {"radial": "Radial Mindmap", "vertical": "Vertical Tree", "horizontal": "Horizontal Tree"}[v],
+        index=["radial", "vertical", "horizontal"].index(st.session_state.layout_mode),
+        help="Change the overall structure from a circular map to a top-down or left-to-right tree."
+    )
+    
+    st.session_state.edge_style = st.radio(
+        "Connection lines", ["standard", "orthogonal", "arrows"],
+        format_func=lambda v: {"standard": "Standard (Curved)", "orthogonal": "Orthogonal (Right Angles)", "arrows": "Straight with Arrows"}[v],
+        index=["standard", "orthogonal", "arrows"].index(st.session_state.edge_style),
+        help="Only applies to Vertical and Horizontal tree layouts."
+    )
     font_label = "Noto (Regular / Bold)" if st.session_state.lang == "ar" else "STIX2Text"
     st.caption(f"Font (auto): **{font_label}** — chosen from the selected language.")
 
@@ -390,6 +402,8 @@ def render_preview_panel():
                 st.session_state.chart_shape,
                 st.session_state.lang,
                 st.session_state.child_path,
+                st.session_state.layout_mode, 
+                st.session_state.edge_style,
                 work_dir,
                 TEMPLATE_DIR,
             )
