@@ -148,7 +148,6 @@
     level 2/.style={sibling distance=2.5cm, level distance=5cm},
     level 3/.style={sibling distance=1.5cm, level distance=4.5cm},
     <% endif -%>
-
     % Node Styles for Trees
     every node/.style={
         <% if shape == 'rectangle' %>rectangle, rounded corners=3pt,<% else %>circle,<% endif %>
@@ -159,7 +158,6 @@
     },
     color logic node/.style={fill=#1, draw=black!20, thick},
     color logic child/.style={},
-
     % Edge Styles for Trees
     <% if edge_style == 'orthogonal' -%>
         <% if layout_mode == 'vertical' -%>
